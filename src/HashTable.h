@@ -43,53 +43,78 @@ using namespace std;
 namespace csi281 {
     template
     <typename K, typename V>
-    class HashTable {
-    public:
-        // Initialize the array with a starting capacity
-        HashTable(int cap = DEFAULT_CAPACITY) {
-            if (cap < 1) { cap = 1; } // cannot have < 1 capacity
-            resize(cap);
-        }
-        
-        // Erase the array
-        ~HashTable() {
-            delete[] backingStore;
-        }
-        
-        // Put the key value pair in the hash table
-        // If *key* is already present, change its
-        // associated value to *value*
-        // If the load factor exceeds the MAX_LOAD_FACTOR
-        // then resize the table
-        // TIP: Be careful to get a reference to the list at each
-        // location in the backing store, so you're modifying
-        // the original and not a copy
-        void put(const K key, const V value) {
+        class HashTable {
+        public:
+            // Initialize the array with a starting capacity
+            HashTable(int cap = DEFAULT_CAPACITY) {
+                if (cap < 1) { cap = 1; } // cannot have < 1 capacity
+                resize(cap);
+            }
+
+            // Erase the array
+            ~HashTable() {
+                delete[] backingStore;
+            }
+
+            // Put the key value pair in the hash table
+            // If *key* is already present, change its
+            // associated value to *value*
+            // If the load factor exceeds the MAX_LOAD_FACTOR
+            // then resize the table
+            // TIP: Be careful to get a reference to the list at each
+            // location in the backing store, so you're modifying
+            // the original and not a copy
+            void put(const K key, const V value) {
+                // YOUR CODE HERE
+
+                int index = hashKey(key) % capacity;
+                list<pair<K, V>>& myList = backingStore[index];
+                for (auto& myPair : myList) {
+                    if (myPair.first == key) {
+                        myPair.second = value;
+                        return;
+                    }
+                }
+                myList.push_back(make_pair(key, value));
+                count++;
+                // cout << getLoadFactor() << endl;
+                if (getLoadFactor() > MAX_LOAD_FACTOR) {
+                    resize(capacity * growthFactor);
+                }
+            }
+
+            // Get the item associated with a particular key
+            // return an empty optional (nullopt) if the item is not found
+            // and returns an optional with the value associated with key
+            // if key is found
+            // TIP: read the documentation on optional
+            // https://en.cppreference.com/w/cpp/utility/optional
+            // TIP: Be careful to get a reference to the list at each
+            // location in the backing store, so you're modifying
+            // the original and not a copy
+            optional<V> get(const K& key) {
+                // YOUR CODE HERE
+                int index = hashKey(key) % capacity;
+                list<pair<K, V>>& myList = backingStore[index];
+                cout << index << endl;
+                for (auto& myPair : myList) {
+                    cout << myPair.first << endl;
+                    if (myPair.first == key) return myPair.second;
+                }
+                return {};
+            }
+            // Remove a key and any associated value from the hash table
+            // TIP: I suggest using remove_if()
+            // https://en.cppreference.com/w/cpp/algorithm/remove
+            // TIP: Be careful to get a reference to the list at each
+            // location in the backing store, so you're modifying
+            // the original and not a copy
+            void remove(const K& key) {
             // YOUR CODE HERE
-        }
-        
-        // Get the item associated with a particular key
-        // return an empty optional (nullopt) if the item is not found
-        // and returns an optional with the value associated with key
-        // if key is found
-        // TIP: read the documentation on optional
-        // https://en.cppreference.com/w/cpp/utility/optional
-        // TIP: Be careful to get a reference to the list at each
-        // location in the backing store, so you're modifying
-        // the original and not a copy
-        optional<V> get(const K &key) {
-            // YOUR CODE HERE
-        }
-        
-        // Remove a key and any associated value from the hash table
-        // TIP: I suggest using remove_if()
-        // https://en.cppreference.com/w/cpp/algorithm/remove
-        // TIP: Be careful to get a reference to the list at each
-        // location in the backing store, so you're modifying
-        // the original and not a copy
-        void remove(const K &key) {
-            // YOUR CODE HERE
-        }
+            int index = hashKey(key) % capacity;
+            list<pair<K, V>>& myList = backingStore[index];
+            myList.erase(remove_if(begin(myList), end(myList), [&](auto myPair) { if (myPair.first == key) { count--; return true; } else return false; }), end(myList));
+      }
         
         // Calculate and return the load factor
         float getLoadFactor() {
@@ -112,7 +137,7 @@ namespace csi281 {
                 cout << i << ":";
                 for (auto p : backingStore[i]) {
                     cout << " -> (" << p.first << ", " << p.second << ")";
-                }
+                    }
                 cout << endl;
             }
         }
@@ -129,7 +154,23 @@ namespace csi281 {
         // the backingStore for the first time
         void resize(int cap) {
             // YOUR CODE HERE
-        }
+            
+            //cout << capacity<<endl;
+            list<pair<K, V>>* newBackingStore = new list<pair<K, V>>[cap];
+            if (backingStore != nullptr) {
+                for (int x = 0; x < capacity; x++) {
+                    for (auto& myPair : backingStore[x]) {
+                        newBackingStore[hashKey(myPair.first) % cap].push_back(myPair);
+
+                    }
+                    
+                }
+            }
+            capacity = cap;
+            //delete[] backingStore;
+            backingStore = newBackingStore;
+
+         }
         
         // hash anything into an integer appropriate for
         // the current capacity
